@@ -1,4 +1,4 @@
-package com.gamelib.GameLib.repositories;
+package com.gamelib.GameLib.repository;
 
 import java.util.Optional;
 
