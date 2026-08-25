@@ -31,8 +31,8 @@ public class BibliotecaJogo {
     private String plataforma;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status_andamento", nullable = false)
-    private StatusJogo statusAndamento;
+    @Column(name = "status_jogo", nullable = false)
+    private StatusJogo statusJogo;
 
     @Min(value = 0, message = "A nota mínima é 0")
     @Max(value = 10, message = "A nota máxima é 10")
@@ -50,8 +50,8 @@ public class BibliotecaJogo {
     @PrePersist
     protected void onCreate() {
         this.dataAdicao = LocalDate.now();
-        if (this.statusAndamento == null) {
-            this.statusAndamento = StatusJogo.NAO_INICIADO;
+        if (this.statusJogo == null) {
+            this.statusJogo = StatusJogo.NAO_INICIADO;
         }
     }
 
@@ -68,8 +68,8 @@ public class BibliotecaJogo {
     public String getPlataforma() { return plataforma; }
     public void setPlataforma(String plataforma) { this.plataforma = plataforma; }
 
-    public StatusJogo getStatusAndamento() { return statusAndamento; }
-    public void setStatusAndamento(StatusJogo statusAndamento) { this.statusAndamento = statusAndamento; }
+    public StatusJogo getStatusJogo() { return statusJogo; }
+    public void setStatusJogo(StatusJogo statusJogo) { this.statusJogo = statusJogo; }
 
     public Integer getNota() { return nota; }
     public void setNota(Integer nota) { this.nota = nota; }
