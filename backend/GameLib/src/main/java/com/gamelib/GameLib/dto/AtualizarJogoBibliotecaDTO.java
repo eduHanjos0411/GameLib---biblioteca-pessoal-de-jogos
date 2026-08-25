@@ -10,7 +10,7 @@ public record AtualizarJogoBibliotecaDTO(
   @NotBlank(message = "A plataforma é obrigatória.")
     String plataforma,
 
-    StatusJogo statusAndamento,
+    StatusJogo statusJogo,
 
     @Min(value = 0, message = "A nota mínima é 0.")
     @Max(value = 10, message = "A nota máxima é 10.")

@@ -12,7 +12,7 @@ public record BibliotecaJogoResponseDTO(
     String urlCapa,
     String categoria,
     String plataforma,
-    StatusJogo statusAndamento,
+    StatusJogo statusJogo,
     Integer nota,
     String opiniao,
     LocalDate dataAdicao) {
@@ -24,7 +24,7 @@ public record BibliotecaJogoResponseDTO(
       entity.getJogo().getUrlCapa(),
       entity.getJogo().getCategoria(),
       entity.getPlataforma(),
-      entity.getStatusAndamento(),
+      entity.getStatusJogo(),
       entity.getNota(),
       entity.getOpiniao(),
       entity.getDataAdicao());
