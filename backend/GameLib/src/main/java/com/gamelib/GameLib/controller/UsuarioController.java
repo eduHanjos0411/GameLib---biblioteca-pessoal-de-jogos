@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.gamelib.GameLib.dto.LoginDTO;
+import com.gamelib.GameLib.dto.TokenResponseDTO;
 import com.gamelib.GameLib.dto.UsuarioCadastroDTO;
 import com.gamelib.GameLib.dto.UsuarioResponseDTO;
 import com.gamelib.GameLib.service.UsuarioService;
@@ -25,10 +27,16 @@ public class UsuarioController {
     this.usuarioService = usuarioService;
   }
 
-  @PostMapping
+  @PostMapping("/cadastrar")
   public ResponseEntity<UsuarioResponseDTO> cadastrarUsuario(@Valid @RequestBody UsuarioCadastroDTO dto) {
     UsuarioResponseDTO response = usuarioService.cadastrarUsuario(dto);
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
+  }
+
+  @PostMapping("/login")
+  public ResponseEntity<TokenResponseDTO> login(@Valid @RequestBody LoginDTO dto) {
+    TokenResponseDTO response = usuarioService.autenticar(dto);
+    return ResponseEntity.ok(response);
   }
 
   @GetMapping("/{id}")
