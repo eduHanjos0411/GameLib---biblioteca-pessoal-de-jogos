@@ -27,6 +27,9 @@ public class UsuarioServiceTest {
   @Mock
   private UsuarioRepository usuarioRepository;
 
+  @Mock
+  private RawgApiService rawgApiService;
+
   @InjectMocks
   private UsuarioService usuarioService;
 
