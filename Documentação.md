@@ -136,7 +136,7 @@ O repositório será organizado de forma a separar a aplicação frontend, o bac
 
 ### 1. Modelagem de Requisitos Detalhada
 
-- **RF01 - Adicionar Jogo à Biblioteca:** O sistema deve permitir que o jogador adicione um jogo à sua biblioteca informando a plataforma e os demais dados disponíveis.
+- **RF01  - Adicionar Jogo à Biblioteca:** O sistema deve permitir que o jogador adicione um jogo à sua biblioteca informando a plataforma e os demais dados disponíveis.
 
   - **Regra de Negócio:** O título e a plataforma devem ser informados para que o jogo seja adicionado à biblioteca.
 
