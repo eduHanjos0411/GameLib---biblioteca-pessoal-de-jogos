@@ -41,6 +41,7 @@ public class SecurityConfig {
             .requestMatchers(HttpMethod.POST, "/api/v1/usuarios/login").permitAll()
             .requestMatchers(HttpMethod.POST, "/api/v1/usuarios/cadastrar").permitAll()
             .requestMatchers("/api/v1/jogos-externos/**").authenticated()
+            .requestMatchers("/api/v1/jogos/**").authenticated()
             .requestMatchers("/h2-console/**").permitAll()
             .anyRequest().authenticated())
         .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
