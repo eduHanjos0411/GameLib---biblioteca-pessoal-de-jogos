@@ -12,6 +12,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -59,6 +60,9 @@ public class BibliotecaServiceTest {
 
     jogo = new Jogo("Cyberpunk 2077", "RPG", "http://capa.jpg", "12345");
     jogo.setId(10L);
+    ArrayList<String> generos = new ArrayList<>();
+    generos.add("RPG");
+    generos.add("FPS");
 
     bibliotecaJogo = new BibliotecaJogo();
     bibliotecaJogo.setId(100L);
@@ -68,9 +72,10 @@ public class BibliotecaServiceTest {
     bibliotecaJogo.setStatusJogo(StatusJogo.JOGANDO);
     bibliotecaJogo.setNota(9);
 
+
     adicionarDTO = new AdicionarJogoBibliotecaDTO(
             "Cyberpunk 2077", "PC", StatusJogo.JOGANDO, 9,
-            "Jogo excelente!", "RPG", "http://capa.jpg", "12345"
+            "Jogo excelente!", generos, "http://capa.jpg", "12345"
     );
   }
 
