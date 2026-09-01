@@ -140,7 +140,7 @@ export function Dashboard() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {jogosFiltrados.map((jogo) => (
               <div 
-                key={jogo.id} 
+                key={jogo.idBase} 
                 className="group relative bg-surface border border-surface-border rounded-2xl overflow-hidden hover:border-brand-neon/50 transition-all duration-300 hover:shadow-neon-purple/20"
               >
                 {/* Capa do Jogo */}
