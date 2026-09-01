@@ -113,7 +113,7 @@ O sistema seguirá uma arquitetura de sistemas distribuídos, separando claramen
 
 O repositório será organizado de forma a separar a aplicação frontend, o backend e a documentação:
 
-- **`/frontend`:** Código fonte da interface do usuário desenvolvida em Angular.
+- **`/frontend`:** Código fonte da interface do usuário desenvolvida em React.
 - **`/backend`:** Lógica do servidor, modelos de dados e controladores da API.
 - **`/docs`:** Documentação técnica e especificações do sistema.
 
