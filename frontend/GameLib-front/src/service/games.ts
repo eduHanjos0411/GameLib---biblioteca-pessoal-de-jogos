@@ -8,14 +8,14 @@ export type StatusJogo =
   | "DESEJADO";
 
 export interface JogoColecao {
-  id: number;
-  titulo: string;
-  capaUrl: string;
+  idBase: number;
+  name: string;
+  background_image: string;
   plataforma: string;
   status: StatusJogo;
   nota?: number;
   comentario?: string;
-  rawgId?: number;
+  id?: number;
 }
 
 export interface JogoExternoDTO {
@@ -27,13 +27,13 @@ export interface JogoExternoDTO {
 }
 
 export interface CriarJogoDTO {
-  titulo: string;
-  capaUrl: string;
+  name: string;
+  background_image: string;
   plataforma: string;
   status: StatusJogo;
   nota?: number;
   comentario?: string;
-  rawgId?: number;
+  id?: number;
 }
 
 export const gamesService = {

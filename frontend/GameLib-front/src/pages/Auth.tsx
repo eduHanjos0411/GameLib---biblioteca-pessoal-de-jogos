@@ -1,4 +1,4 @@
-import { useState, FormEvent } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Gamepad2, LogIn, UserPlus, AlertCircle } from 'lucide-react';
 import { Input } from '../components/ui/Input';
@@ -16,7 +16,7 @@ export function Auth() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setErrorMsg('');

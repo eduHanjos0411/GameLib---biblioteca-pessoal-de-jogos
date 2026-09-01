@@ -146,8 +146,8 @@ export function Dashboard() {
                 {/* Capa do Jogo */}
                 <div className="relative h-56 overflow-hidden">
                   <img 
-                    src={jogo.capaUrl} 
-                    alt={jogo.titulo} 
+                    src={jogo.background_image} 
+                    alt={jogo.name} 
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-linear-to-t from-surface to-transparent opacity-60" />
@@ -169,7 +169,7 @@ export function Dashboard() {
                 {/* Info do Jogo */}
                 <div className="p-5">
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-bold text-white leading-tight line-clamp-1">{jogo.titulo}</h3>
+                    <h3 className="font-bold text-white leading-tight line-clamp-1">{jogo.name}</h3>
                     {jogo.nota && (
                       <div className="flex items-center gap-1 text-brand-neon">
                         <Star className="w-3 h-3 fill-brand-neon" />

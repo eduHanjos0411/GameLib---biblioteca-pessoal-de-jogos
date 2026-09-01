@@ -1,4 +1,4 @@
-import { useState, FormEvent } from 'react';
+import { useState } from 'react';
 import { 
   X, 
   Search, 
@@ -33,7 +33,7 @@ export function AddGameModal({ isOpen, onClose, onGameAdded }: AddGameModalProps
 
   if (!isOpen) return null;
 
-  const handleSearch = async (e: FormEvent) => {
+  const handleSearch = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!query.trim()) return;
 
@@ -55,16 +55,16 @@ export function AddGameModal({ isOpen, onClose, onGameAdded }: AddGameModalProps
     }
   };
 
-  const handleSave = async (e: FormEvent) => {
+  const handleSave = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!selectedGame) return;
 
     setSaving(true);
     try {
       await gamesService.adicionarJogo({
-        titulo: selectedGame.nome,
-        capaUrl: selectedGame.capaUrl,
-        rawgId: selectedGame.rawgId,
+        name: selectedGame.name,
+        background_image: selectedGame.background_image,
+        id: selectedGame.id,
         plataforma,
         status,
         nota: Number(nota),
@@ -127,7 +127,7 @@ export function AddGameModal({ isOpen, onClose, onGameAdded }: AddGameModalProps
             <div className="space-y-6">
               <form onSubmit={handleSearch} className="relative group">
                 <Input
-                  placeholder="Pesquisar por nome do jogo..."
+                  placeholder="Pesquisar por name do jogo..."
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   className="pl-12 h-14 text-base"
@@ -150,19 +150,19 @@ export function AddGameModal({ isOpen, onClose, onGameAdded }: AddGameModalProps
                 ) : searchResults.length > 0 ? (
                   searchResults.map((game, index) => (
                     <button
-                      key={game.rawgId ? `rawg-${game.rawgId}` : `idx-${index}`}
+                      key={game.id ? `rawg-${game.id}` : `idx-${index}`}
                       onClick={() => handleSelectGame(game)}
                       className="group flex items-center gap-4 p-3 bg-surface-hover/40 border border-surface-border rounded-xl hover:border-brand-neon/50 hover:bg-surface-hover transition-all text-left"
                     >
                       <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 border border-surface-border">
-                        <img src={game.capaUrl} alt="" className="w-full h-full object-cover" />
+                        <img src={game.background_image} alt="" className="w-full h-full object-cover" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="text-sm font-bold text-white truncate group-hover:text-brand-neon transition-colors">
-                          {game.nome}
+                          {game.name}
                         </h4>
                         <p className="text-xs text-gray-500 mt-0.5 uppercase tracking-tighter">
-                          {game.generos?.slice(0, 3).join(' • ')}
+                          {game.genres?.slice(0, 3).join(' • ')}
                         </p>
                       </div>
                       <PlusIcon />
@@ -181,14 +181,14 @@ export function AddGameModal({ isOpen, onClose, onGameAdded }: AddGameModalProps
             <form onSubmit={handleSave} className="space-y-6">
               <div className="relative h-40 rounded-2xl overflow-hidden border border-surface-border group">
                 <img 
-                  src={selectedGame.capaUrl} 
+                  src={selectedGame.background_image} 
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
                   alt="" 
                 />
                 <div className="absolute inset-0 bg-linear-to-t from-background via-background/40 to-transparent" />
                 <div className="absolute bottom-4 left-4 right-4">
                   <h3 className="text-xl font-black text-white uppercase italic tracking-tighter drop-shadow-lg">
-                    {selectedGame.nome}
+                    {selectedGame.name}
                   </h3>
                 </div>
               </div>
