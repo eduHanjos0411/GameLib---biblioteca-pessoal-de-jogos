@@ -159,7 +159,7 @@ export function Dashboard() {
                   </div>
 
                   <button 
-                    onClick={() => handleRemoverJogo(jogo.id)}
+                    onClick={() => handleRemoverJogo(jogo.idBase)}
                     className="absolute top-3 right-3 p-2 bg-black/40 backdrop-blur-md text-gray-300 hover:text-brand-red rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     <Trash2 className="w-4 h-4" />
