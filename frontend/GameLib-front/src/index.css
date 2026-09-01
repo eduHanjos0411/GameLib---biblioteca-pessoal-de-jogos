@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #0a0910;
+  
+  --color-surface: #13111c;
+  --color-surface-hover: #1c1929;
+  --color-surface-border: #2a243a;
+
+  --color-brand-purple: #6300b2;
+  --color-brand-neon: #a855f7;
+  --color-brand-pink: #ec4899;
+  --color-brand-red: #ff0000;
+
+  --shadow-neon-purple: 0 0 20px -3px rgba(99, 0, 178, 0.5);
+  --shadow-neon-glow: 0 0 15px rgba(168, 85, 247, 0.4);
+}
+
+body {
+  background-color: var(--color-background);
+  color: #f3f4f6;
+  font-family: system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(99, 0, 178, 0.15) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(255, 0, 0, 0.08) 0px, transparent 50%);
+  background-attachment: fixed;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0910;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a243a;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #6300b2;
+}
+
+/* Classes utilitárias das tags de status */
+.status-tag-JOGANDO {
+  background-color: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+  border-color: rgba(59, 130, 246, 0.3);
+}
+.status-tag-ZERADO {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+.status-tag-PLATINADO {
+  background-color: rgba(234, 179, 8, 0.2);
+  color: #facc15;
+  border-color: rgba(234, 179, 8, 0.3);
+}
+.status-tag-ABANDONADO {
+  background-color: rgba(113, 113, 122, 0.2);
+  color: #a1a1aa;
+  border-color: rgba(113, 113, 122, 0.3);
+}
+.status-tag-DESEJADO {
+  background-color: rgba(236, 72, 153, 0.2);
+  color: #ec4899;
+  border-color: rgba(236, 72, 153, 0.3);
+}

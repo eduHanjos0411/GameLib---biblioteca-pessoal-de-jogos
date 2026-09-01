@@ -57,9 +57,9 @@ public class BibliotecaService {
     itemBiblioteca.setUsuario(usuario);
     itemBiblioteca.setJogo(jogo);
     itemBiblioteca.setPlataforma(dto.plataforma());
-    itemBiblioteca.setStatusJogo(dto.statusJogo() != null ? dto.statusJogo() : StatusJogo.NAO_INICIADO);
+    itemBiblioteca.setStatusJogo(dto.status() != null ? dto.status() : StatusJogo.NAO_INICIADO);
     itemBiblioteca.setNota(dto.nota());
-    itemBiblioteca.setOpiniao(dto.opiniao());
+    itemBiblioteca.setOpiniao(dto.comentario());
 
     BibliotecaJogo salvo = bibliotecaJogoRepository.save(itemBiblioteca);
     return BibliotecaJogoResponseDTO.fromEntity(salvo);
@@ -67,8 +67,8 @@ public class BibliotecaService {
 
   private Jogo resolverOuCriarJogo(AdicionarJogoBibliotecaDTO dto) {
     // Tenta buscar por ID da API externa caso informado
-    if (dto.apiExternalId() != null && !dto.apiExternalId().isBlank()) {
-      var jogoExistente = jogoRepository.findByApiExternalId(dto.apiExternalId());
+    if (dto.id() != null && !dto.id().isBlank()) {
+      var jogoExistente = jogoRepository.findByApiExternalId(dto.id());
       if (jogoExistente.isPresent()) {
         return jogoExistente.get();
       }
@@ -82,12 +82,12 @@ public class BibliotecaService {
   private Jogo criarNovoJogoComDadosExternos(AdicionarJogoBibliotecaDTO dto) {
     Jogo novoJogo = new Jogo();
     novoJogo.setTitulo(dto.titulo());
-    novoJogo.setCategoria(dto.categoria());
-    novoJogo.setUrlCapa(dto.urlCapa());
-    novoJogo.setApiExternalId(dto.apiExternalId());
+    novoJogo.setCategoria(dto.genres() != null && !dto.genres().isEmpty() ? dto.genres().get(0) : null);
+    novoJogo.setUrlCapa(dto.background_image());
+    novoJogo.setApiExternalId(dto.id());
 
     // Se dados de capa/categoria vierem vazios do DTO, busca do RAWG como fallback
-    if ((dto.urlCapa() == null || dto.categoria() == null) && dto.titulo() != null) {
+    if ((dto.background_image() == null || dto.genres() == null) && dto.titulo() != null) {
       List<RawgGameResponseDTO> buscaExterna = rawgApiService.buscarJogosPorNome(dto.titulo());
       if (!buscaExterna.isEmpty()) {
         RawgGameResponseDTO dadosApi = buscaExterna.get(0);
