@@ -182,3 +182,863 @@ Descrição das principais entidades e seus relacionamentos:
 - **Usuario:** `id`, `nome`, `email`, `senha_hash`.
 - **Jogo:** `id`, `titulo`, `categoria`, `url_capa`.
 - **BibliotecaJogo:** `id`, `id_usuario` (FK), `id_jogo` (FK), `plataforma`, `status`, `nota`, `data_adicao`.
+
+- Perfeito. Analisei o arquivo `GameLib---biblioteca-pessoal-de-jogos-main.zip` e, com base no código real do projeto, fiz a substituição mantendo **a mesma estrutura de tópicos do seu exemplo**, mas agora adaptada ao **GameLib — Biblioteca Pessoal de Jogos**.
+
+Um detalhe importante: no projeto enviado, o frontend é **React + TypeScript + Vite**, e não Angular. Também considerei os endpoints e regras que realmente aparecem no código.
+
+## Backend (Java + Spring Boot)
+
+### 1. Modelo de Dados (Entidade BibliotecaJogo)
+
+Seguindo a modelagem de dados do GameLib, a entidade `BibliotecaJogo` representa o vínculo entre um usuário e um jogo, armazenando informações específicas da biblioteca pessoal, como plataforma, status, nota e opinião:
+
+```java
+@Entity
+@Table(name = "biblioteca_jogos")
+public class BibliotecaJogo {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_usuario", nullable = false)
+    private Usuario usuario;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_jogo", nullable = false)
+    private Jogo jogo;
+
+    @NotBlank(message = "A plataforma é obrigatória")
+    @Column(nullable = false)
+    private String plataforma;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status_jogo", nullable = false)
+    private StatusJogo statusJogo;
+
+    @Min(value = 0, message = "A nota mínima é 0")
+    @Max(value = 10, message = "A nota máxima é 10")
+    private Integer nota;
+
+    @Column(columnDefinition = "TEXT")
+    private String opiniao;
+
+    @Column(name = "data_adicao", nullable = false, updatable = false)
+    private LocalDate dataAdicao;
+
+    @PrePersist
+    protected void onCreate() {
+        this.dataAdicao = LocalDate.now();
+
+        if (this.statusJogo == null) {
+            this.statusJogo = StatusJogo.NAO_INICIADO;
+        }
+    }
+
+    // Getters e Setters
+}
+```
+
+A entidade `Jogo` armazena os dados gerais do jogo:
+
+```java
+@Entity
+@Table(name = "jogos")
+public class Jogo {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @NotBlank(message = "O título é obrigatório")
+    @Column(nullable = false)
+    private String titulo;
+
+    private String categoria;
+
+    @Column(name = "url_capa")
+    private String urlCapa;
+
+    @Column(name = "api_external_id")
+    private String apiExternalId;
+
+    // Getters e Setters
+}
+```
+
+A entidade `Usuario` representa o jogador cadastrado no sistema:
+
+```java
+@Entity
+@Table(name = "usuarios")
+public class Usuario {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @NotBlank(message = "O nome é obrigatório")
+    @Column(nullable = false)
+    private String nome;
+
+    @NotBlank(message = "O email é obrigatório")
+    @Email(message = "Formato de email inválido")
+    @Column(nullable = false)
+    private String email;
+
+    @NotBlank(message = "A senha é obrigatória")
+    @Column(name = "senha_hash", nullable = false)
+    private String senha;
+
+    @Column(name = "data_criacao", nullable = false)
+    private LocalDateTime dataCriacao;
+
+    // Getters e Setters
+}
+```
+
+Os status disponíveis para os jogos são representados pelo enum:
+
+```java
+public enum StatusJogo {
+    JOGANDO,
+    FINALIZADO,
+    ABANDONADO,
+    NAO_INICIADO
+}
+```
+
+### 2. Regra de Negócio (Serviço de Biblioteca)
+
+A implementação do caso de uso de adicionar um jogo à biblioteca é realizada pelo `BibliotecaService`.
+
+Antes de criar o registro, o sistema verifica se o usuário já possui o mesmo jogo cadastrado para a mesma plataforma:
+
+```java
+@Service
+public class BibliotecaService {
+
+    private final BibliotecaJogoRepository bibliotecaJogoRepository;
+    private final JogoRepository jogoRepository;
+    private final UsuarioService usuarioService;
+    private final RawgApiService rawgApiService;
+
+    public BibliotecaJogoResponseDTO adicionarJogo(
+            Long usuarioId,
+            AdicionarJogoBibliotecaDTO dto) {
+
+        Usuario usuario = usuarioService.buscarEntityPorId(usuarioId);
+
+        // Localiza ou cria o jogo
+        Jogo jogo = resolverOuCriarJogo(dto);
+
+        // Verifica duplicidade
+        boolean jaExiste =
+            bibliotecaJogoRepository
+                .existsByUsuarioIdAndJogoIdAndPlataformaIgnoreCase(
+                    usuario.getId(),
+                    jogo.getId(),
+                    dto.plataforma()
+                );
+
+        if (jaExiste) {
+            throw new RegraNegocioException(
+                "Este jogo já está cadastrado em sua biblioteca para a plataforma "
+                + dto.plataforma()
+            );
+        }
+
+        // Cria o vínculo entre usuário e jogo
+        BibliotecaJogo itemBiblioteca = new BibliotecaJogo();
+
+        itemBiblioteca.setUsuario(usuario);
+        itemBiblioteca.setJogo(jogo);
+        itemBiblioteca.setPlataforma(dto.plataforma());
+        itemBiblioteca.setStatusJogo(
+            dto.status() != null
+                ? dto.status()
+                : StatusJogo.NAO_INICIADO
+        );
+        itemBiblioteca.setNota(dto.nota());
+        itemBiblioteca.setOpiniao(dto.comentario());
+
+        BibliotecaJogo salvo =
+            bibliotecaJogoRepository.save(itemBiblioteca);
+
+        return BibliotecaJogoResponseDTO.fromEntity(salvo);
+    }
+}
+```
+
+Além da adição, o serviço permite listar, filtrar, atualizar e remover jogos da biblioteca.
+
+### 3.Controlador da API (Contratos)
+
+O controlador disponibiliza os endpoints REST responsáveis pelo gerenciamento da biblioteca:
+
+```java
+@RestController
+@RequestMapping("/api/v1/biblioteca")
+public class BibliotecaController {
+
+    private final BibliotecaService bibliotecaService;
+
+    public BibliotecaController(BibliotecaService bibliotecaService) {
+        this.bibliotecaService = bibliotecaService;
+    }
+
+    @PostMapping
+    public ResponseEntity<BibliotecaJogoResponseDTO> adicionarJogo(
+            @AuthenticationPrincipal Usuario usuarioLogado,
+            @Valid @RequestBody AdicionarJogoBibliotecaDTO dto) {
+
+        BibliotecaJogoResponseDTO response =
+            bibliotecaService.adicionarJogo(
+                usuarioLogado.getId(),
+                dto
+            );
+
+        return ResponseEntity
+            .status(HttpStatus.CREATED)
+            .body(response);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<BibliotecaJogoResponseDTO>> listarBiblioteca(
+            @AuthenticationPrincipal Usuario usuarioLogado,
+            @RequestParam(required = false) StatusJogo status) {
+
+        if (status != null) {
+            return ResponseEntity.ok(
+                bibliotecaService.listarPorStatus(
+                    usuarioLogado.getId(),
+                    status
+                )
+            );
+        }
+
+        return ResponseEntity.ok(
+            bibliotecaService.listarBibliotecaPorUsuario(
+                usuarioLogado.getId()
+            )
+        );
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<BibliotecaJogoResponseDTO> atualizarItem(
+            @AuthenticationPrincipal Usuario usuarioLogado,
+            @PathVariable Long id,
+            @Valid @RequestBody AtualizarJogoBibliotecaDTO dto) {
+
+        return ResponseEntity.ok(
+            bibliotecaService.atualizarItem(
+                usuarioLogado.getId(),
+                id,
+                dto
+            )
+        );
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> removerItem(
+            @AuthenticationPrincipal Usuario usuarioLogado,
+            @PathVariable Long id) {
+
+        bibliotecaService.removerItem(
+            usuarioLogado.getId(),
+            id
+        );
+
+        return ResponseEntity.noContent().build();
+    }
+}
+```
+
+Os principais contratos são:
+
+| Método | Endpoint                                 | Função                  |
+| ------ | ---------------------------------------- | ----------------------- |
+| POST   | `/api/v1/biblioteca`                     | Adicionar jogo          |
+| GET    | `/api/v1/biblioteca`                     | Listar biblioteca       |
+| GET    | `/api/v1/biblioteca?status=JOGANDO`      | Filtrar por status      |
+| PUT    | `/api/v1/biblioteca/{id}`                | Atualizar jogo          |
+| DELETE | `/api/v1/biblioteca/{id}`                | Remover jogo            |
+| GET    | `/api/v1/jogos-externos/buscar?nome=...` | Pesquisar jogos na RAWG |
+
+### 4. Validação de Dados no Backend
+
+A validação ocorre tanto na entrada dos dados da API quanto na aplicação das regras de negócio no serviço.
+
+### 5.Validação no DTO (Entrada da API)
+
+Para adicionar um jogo, o GameLib utiliza Bean Validation diretamente no DTO:
+
+```java
+public record AdicionarJogoBibliotecaDTO(
+
+    @NotBlank(message = "O título do jogo é obrigatório.")
+    String titulo,
+
+    @NotBlank(message = "A plataforma é obrigatória.")
+    String plataforma,
+
+    StatusJogo status,
+
+    @Min(value = 0, message = "A nota mínima é 0.")
+    @Max(value = 10, message = "A nota máxima é 10.")
+    Integer nota,
+
+    String comentario,
+
+    ArrayList<String> genres,
+
+    String background_image,
+
+    String id
+) {
+}
+```
+
+Dessa forma, o sistema impede, por exemplo, que um jogo seja cadastrado sem título ou plataforma e também impede notas fora do intervalo de 0 a 10.
+
+### Validação de Regra de Negócio (Serviço)
+
+Além das validações do DTO, o serviço verifica regras relacionadas à biblioteca do usuário.
+
+A principal regra implementada é impedir que o mesmo jogo seja cadastrado novamente para a mesma plataforma:
+
+```java
+boolean jaExiste =
+    bibliotecaJogoRepository
+        .existsByUsuarioIdAndJogoIdAndPlataformaIgnoreCase(
+            usuario.getId(),
+            jogo.getId(),
+            dto.plataforma()
+        );
+
+if (jaExiste) {
+    throw new RegraNegocioException(
+        "Este jogo já está cadastrado em sua biblioteca para a plataforma "
+        + dto.plataforma()
+    );
+}
+```
+
+O serviço também garante que operações de atualização e remoção sejam realizadas somente sobre jogos pertencentes ao usuário autenticado:
+
+```java
+BibliotecaJogo item =
+    bibliotecaJogoRepository
+        .findByIdAndUsuarioId(itemBibliotecaId, usuarioId)
+        .orElseThrow(() ->
+            new ResourceNotFoundException(
+                "Item não encontrado ou sem permissão para alteração."
+            )
+        );
+```
+
+### 5. Testes Automatizados no Backend
+
+A suíte de testes utiliza **JUnit 5 e Mockito** para validar as principais regras de negócio do sistema.
+
+Os testes devem ser executados durante o processo de build utilizando Maven:
+
+```bash
+mvn test
+```
+
+### Teste Unitário para Adição de Jogo
+
+O teste abaixo verifica se um jogo pode ser adicionado corretamente à biblioteca:
+
+```java
+@ExtendWith(MockitoExtension.class)
+public class BibliotecaServiceTest {
+
+    @Mock
+    private BibliotecaJogoRepository bibliotecaJogoRepository;
+
+    @Mock
+    private JogoRepository jogoRepository;
+
+    @Mock
+    private UsuarioService usuarioService;
+
+    @InjectMocks
+    private BibliotecaService bibliotecaService;
+
+    @Test
+    @DisplayName("Deve adicionar jogo na biblioteca com sucesso")
+    void adicionarJogoComSucesso() {
+
+        when(usuarioService.buscarEntityPorId(1L))
+            .thenReturn(usuario);
+
+        when(jogoRepository
+            .findByTituloIgnoreCase("Cyberpunk 2077"))
+            .thenReturn(Optional.of(jogo));
+
+        when(bibliotecaJogoRepository
+            .existsByUsuarioIdAndJogoIdAndPlataformaIgnoreCase(
+                1L, 10L, "PC"))
+            .thenReturn(false);
+
+        when(bibliotecaJogoRepository
+            .save(any(BibliotecaJogo.class)))
+            .thenReturn(bibliotecaJogo);
+
+        BibliotecaJogoResponseDTO response =
+            bibliotecaService.adicionarJogo(
+                1L,
+                adicionarDTO
+            );
+
+        assertNotNull(response);
+        assertEquals("Cyberpunk 2077", response.titulo());
+        assertEquals("PC", response.plataforma());
+        assertEquals(
+            StatusJogo.JOGANDO,
+            response.statusJogo()
+        );
+
+        verify(
+            bibliotecaJogoRepository,
+            times(1)
+        ).save(any(BibliotecaJogo.class));
+    }
+}
+```
+
+Também existe um teste para garantir que o sistema bloqueie jogos duplicados:
+
+```java
+@Test
+@DisplayName(
+    "Deve lançar RegraNegocioException se o jogo já estiver "
+    + "cadastrado para a mesma plataforma"
+)
+void adicionarJogoDuplicadoNaMesmaPlataformaLancaExcecao() {
+
+    when(usuarioService.buscarEntityPorId(1L))
+        .thenReturn(usuario);
+
+    when(jogoRepository
+        .findByTituloIgnoreCase("Cyberpunk 2077"))
+        .thenReturn(Optional.of(jogo));
+
+    when(bibliotecaJogoRepository
+        .existsByUsuarioIdAndJogoIdAndPlataformaIgnoreCase(
+            1L, 10L, "PC"))
+        .thenReturn(true);
+
+    RegraNegocioException exception =
+        assertThrows(
+            RegraNegocioException.class,
+            () -> bibliotecaService
+                .adicionarJogo(1L, adicionarDTO)
+        );
+
+    assertTrue(
+        exception.getMessage()
+            .contains("já está cadastrado")
+    );
+
+    verify(
+        bibliotecaJogoRepository,
+        never()
+    ).save(any(BibliotecaJogo.class));
+}
+```
+
+## 6. Ambiente e Automação (Backend)
+
+### pom.xml (Maven - Backend)
+
+O projeto utiliza Maven para gerenciamento das dependências e automação do build. A configuração atual utiliza **Java 21** e Spring Boot.
+
+As principais dependências utilizadas são:
+
+```xml
+<properties>
+    <java.version>21</java.version>
+</properties>
+
+<dependencies>
+
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-data-jpa</artifactId>
+    </dependency>
+
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-webmvc</artifactId>
+    </dependency>
+
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-security</artifactId>
+    </dependency>
+
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
+
+    <dependency>
+        <groupId>org.postgresql</groupId>
+        <artifactId>postgresql</artifactId>
+        <scope>runtime</scope>
+    </dependency>
+
+    <dependency>
+        <groupId>com.h2database</groupId>
+        <artifactId>h2</artifactId>
+        <scope>runtime</scope>
+    </dependency>
+
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-test</artifactId>
+        <scope>test</scope>
+    </dependency>
+
+</dependencies>
+```
+
+O projeto também utiliza:
+
+* Spring Data JPA/Hibernate para persistência;
+* Spring Security para autenticação;
+* JWT para autorização;
+* H2 para desenvolvimento/testes;
+* PostgreSQL para produção;
+* Lombok;
+* JUnit e Mockito para testes.
+
+### application.properties (Spring Boot - Backend)
+
+No ambiente de desenvolvimento, o sistema utiliza banco H2 em memória:
+
+```properties
+spring.application.name=GameLib
+server.port=9000
+
+# Configuração do Banco H2 em memória
+spring.datasource.url=jdbc:h2:mem:gamelibdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+spring.datasource.driverClassName=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=
+
+# Console H2
+spring.h2.console.enabled=true
+spring.h2.console.path=/h2-console
+
+# JPA / Hibernate
+spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+
+# RAWG API
+rawg.api.url=https://api.rawg.io/api
+rawg.api.key=${RAWG_API_KEY}
+
+# JWT
+api.security.token.secret=${JWT_SECRET}
+api.security.token.expiration-ms=86400000
+```
+
+Para produção, o projeto possui configurações específicas para PostgreSQL:
+
+```properties
+spring.datasource.url=${DATABASE_URL}
+spring.datasource.username=${DATABASE_USERNAME}
+spring.datasource.password=${DATABASE_PASSWORD}
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=false
+
+api.security.token.secret=${JWT_SECRET}
+
+rawg.api.key=${RAWG_API_KEY}
+rawg.api.url=https://api.rawg.io/api
+```
+
+> **Observação de segurança:** no arquivo enviado havia uma chave da RAWG e um segredo JWT diretamente no `application.properties`. Na documentação final, é mais adequado representá-los como variáveis de ambiente, como acima, para não expor credenciais no código-fonte.
+
+# Implementação do Frontend (React)
+
+O frontend do GameLib utiliza **React com TypeScript**, Vite, Axios e Tailwind CSS.
+
+### 1.Consumo da API (Serviço)
+
+A comunicação com o backend é centralizada utilizando Axios:
+
+```typescript
+import axios from 'axios';
+
+export const api = axios.create({
+  baseURL:
+    'https://gamelib-biblioteca-pessoal-de-jogos.onrender.com/api/v1',
+
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+```
+
+O token JWT armazenado no navegador é automaticamente enviado nas requisições:
+
+```typescript
+api.interceptors.request.use((config) => {
+
+  const token =
+    localStorage.getItem('@GameLib:token');
+
+  if (token) {
+    config.headers.Authorization =
+      `Bearer ${token}`;
+  }
+
+  return config;
+});
+```
+
+O serviço de jogos disponibiliza as operações principais:
+
+```typescript
+export const gamesService = {
+
+  async listarMeusJogos(): Promise<JogoColecao[]> {
+    const { data } =
+      await api.get<JogoColecao[]>("/jogos");
+
+    return data;
+  },
+
+  async buscarJogosExternos(
+    query: string
+  ): Promise<JogoExternoDTO[]> {
+
+    const { data } =
+      await api.get<JogoExternoDTO[]>(
+        "/jogos-externos/buscar",
+        {
+          params: {
+            nome: query
+          }
+        }
+      );
+
+    return data;
+  },
+
+  async adicionarJogo(
+    jogo: CriarJogoDTO
+  ): Promise<JogoColecao> {
+
+    const { data } =
+      await api.post<JogoColecao>(
+        "/jogos",
+        jogo
+      );
+
+    return data;
+  },
+
+  async removerJogo(id: number): Promise<void> {
+    await api.delete(`/jogos/${id}`);
+  }
+};
+```
+
+### 2.Componente de Busca (Interface)
+
+O componente `AddGameModal` permite ao usuário pesquisar jogos através da API externa RAWG antes de adicioná-los à biblioteca.
+
+O fluxo de busca pode ser representado da seguinte forma:
+
+```tsx
+const handleSearch = async (
+  e: React.SubmitEvent<HTMLFormElement>
+) => {
+
+  e.preventDefault();
+
+  if (!query.trim()) return;
+
+  setSearching(true);
+
+  try {
+
+    const results =
+      await gamesService.buscarJogosExternos(query);
+
+    setSearchResults(results);
+
+  } catch (err) {
+
+    console.error(
+      'Erro ao buscar jogo:',
+      err
+    );
+
+  } finally {
+
+    setSearching(false);
+  }
+};
+```
+
+Depois da pesquisa, o usuário pode selecionar um jogo e configurar:
+
+* plataforma;
+* status;
+* nota;
+* comentário.
+
+O cadastro é realizado através do serviço:
+
+```tsx
+await gamesService.adicionarJogo({
+    name: selectedGame.name,
+    background_image:
+        selectedGame.background_image,
+    id: selectedGame.id,
+    plataforma,
+    status,
+    nota: Number(nota),
+    comentario
+});
+```
+
+Na tela principal, o componente `Dashboard` apresenta a coleção do usuário em cards, permitindo visualizar capa, nome, plataforma, status, nota e comentário.
+
+Também são disponibilizados filtros por status:
+
+```tsx
+const jogosFiltrados =
+    filterStatus === 'TODOS'
+        ? jogos
+        : jogos.filter(
+            j => j.status === filterStatus
+          );
+```
+
+### 3.Validação de Dados no Frontend
+
+A validação no frontend evita o envio de dados incompletos e fornece feedback imediato ao usuário.
+
+No formulário de adição de jogos, por exemplo, a plataforma é obrigatória:
+
+```tsx
+<Input
+    value={plataforma}
+    onChange={(e) =>
+        setPlataforma(e.target.value)
+    }
+    placeholder="Ex: PC, PS5, Switch"
+    required
+/>
+```
+
+A interface também limita a nota entre 0 e 10:
+
+```tsx
+<input
+    type="range"
+    min="0"
+    max="10"
+    step="0.5"
+    value={nota}
+    onChange={(e) =>
+        setNota(Number(e.target.value))
+    }
+/>
+```
+
+O frontend realiza essas validações para melhorar a experiência do usuário, mas as regras também são obrigatoriamente verificadas no backend.
+
+### 4.Testes Automatizados no Frontend
+
+No projeto enviado, o frontend possui configuração para TypeScript, ESLint e build automatizado através do Vite:
+
+```json
+{
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  }
+}
+```
+
+O processo de validação do frontend pode ser executado com:
+
+```bash
+npm run lint
+npm run build
+```
+
+A estrutura atual do projeto **não apresenta uma suíte Jest/React Testing Library implementada**, portanto não seria correto afirmar que esses testes já existem no código enviado. Caso sejam exigidos pelo projeto, podem ser adicionados posteriormente.
+
+### Ambiente e Automação (Frontend)
+
+O frontend utiliza Vite para desenvolvimento e build da aplicação React.
+
+As principais tecnologias utilizadas são:
+
+* React 19;
+* TypeScript;
+* Vite;
+* Axios;
+* React Router;
+* Tailwind CSS;
+* Lucide React;
+* ESLint.
+
+O build é realizado através de:
+
+```bash
+npm run build
+```
+
+E a aplicação pode ser executada em ambiente de desenvolvimento através de:
+
+```bash
+npm run dev
+```
+
+### `.env` (React - Frontend)
+
+A URL da API deve ser configurada através de variável de ambiente para evitar que o endereço do backend fique fixo no código.
+
+Para o Vite, a configuração recomendada é:
+
+```env
+# URL da API REST
+VITE_API_URL=http://localhost:9000/api/v1
+
+# Ambiente da aplicação
+VITE_ENVIRONMENT=development
+```
+
+No código do Axios:
+
+```typescript
+export const api = axios.create({
+    baseURL: import.meta.env.VITE_API_URL,
+    headers: {
+        'Content-Type': 'application/json',
+    },
+});
+```
+
+Dessa forma, é possível utilizar diferentes URLs para desenvolvimento e produção sem alterar o código-fonte da aplicação.
+
