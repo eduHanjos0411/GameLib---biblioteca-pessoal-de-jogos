@@ -42,10 +42,12 @@ Uma lista priorizada de funcionalidades para guiar o desenvolvimento incremental
 
 ### 2. Contratos da API (Documentação Técnica)
 
-#### Exemplo de Endpoint: Busca de Jogos
+#### Endpoint 1: Busca de Jogos
 
-- **Rota:** `GET /api/v1/jogos`
-- **Parâmetros (Query):** `titulo` (string).
+**Rota:** `GET /api/v1/jogos`
+
+**Parâmetros (Query):**
+- `titulo` (string, opcional) - Filtro pelo título do jogo
 
 **Resposta de Sucesso (200 OK):**
 
@@ -59,9 +61,9 @@ Uma lista priorizada de funcionalidades para guiar o desenvolvimento incremental
 ]
 ```
 
-#### Exemplo de Endpoint: Adicionar Jogo à Biblioteca
+#### Endpoint 2: Adicionar Jogo à Biblioteca
 
-- **Rota:** `POST /api/v1/biblioteca`
+**Rota:** `POST /api/v1/biblioteca`
 
 **Corpo da Requisição (JSON):**
 
@@ -74,9 +76,23 @@ Uma lista priorizada de funcionalidades para guiar o desenvolvimento incremental
 }
 ```
 
+**Resposta de Sucesso (201 Created):**
+
+```json
+{
+  "id": 1,
+  "jogoId": 101,
+  "titulo": "The Witcher 3: Wild Hunt",
+  "plataforma": "PC",
+  "status": "JOGANDO",
+  "nota": 10,
+  "dataAdicao": "2024-01-15"
+}
+```
+
 **Resposta de Erro (400 Bad Request):**
 
-Caso o título ou a plataforma não sejam informados.
+Caso o título ou a plataforma não sejam informados:
 
 ```json
 {
@@ -84,11 +100,120 @@ Caso o título ou a plataforma não sejam informados.
 }
 ```
 
+#### Endpoint 3: Listar Biblioteca do Usuário
+
+**Rota:** `GET /api/v1/biblioteca`
+
+**Parâmetros (Query):**
+- `status` (string, opcional) - Filtrar por status (JOGANDO, FINALIZADO, ABANDONADO, NAO_INICIADO)
+
+**Resposta de Sucesso (200 OK):**
+
+```json
+[
+  {
+    "id": 1,
+    "titulo": "The Witcher 3: Wild Hunt",
+    "plataforma": "PC",
+    "status": "JOGANDO",
+    "nota": 9,
+    "dataAdicao": "2024-01-15"
+  },
+  {
+    "id": 2,
+    "titulo": "Cyberpunk 2077",
+    "plataforma": "PC",
+    "status": "FINALIZADO",
+    "nota": 8,
+    "dataAdicao": "2024-01-20"
+  }
+]
+```
+
+#### Endpoint 4: Atualizar Jogo da Biblioteca
+
+**Rota:** `PUT /api/v1/biblioteca/{id}`
+
+**Parâmetro da Rota:**
+- `id` (number) - Identificador único do item na biblioteca
+
+**Corpo da Requisição (JSON):**
+
+```json
+{
+  "plataforma": "PC",
+  "status": "FINALIZADO",
+  "nota": 9,
+  "comentario": "Excelente jogo!"
+}
+```
+
+**Resposta de Sucesso (200 OK):**
+
+```json
+{
+  "id": 1,
+  "titulo": "The Witcher 3: Wild Hunt",
+  "plataforma": "PC",
+  "status": "FINALIZADO",
+  "nota": 9,
+  "comentario": "Excelente jogo!",
+  "dataAdicao": "2024-01-15"
+}
+```
+
+#### Endpoint 5: Remover Jogo da Biblioteca
+
+**Rota:** `DELETE /api/v1/biblioteca/{id}`
+
+**Parâmetro da Rota:**
+- `id` (number) - Identificador único do item na biblioteca
+
+**Resposta de Sucesso (204 No Content):**
+
+```
+(Sem corpo de resposta)
+```
+
+**Resposta de Erro (404 Not Found):**
+
+```json
+{
+  "erro": "Item não encontrado ou sem permissão para alteração."
+}
+```
+
+#### Endpoint 6: Pesquisar Jogos Externos (RAWG API)
+
+**Rota:** `GET /api/v1/jogos-externos/buscar`
+
+**Parâmetros (Query):**
+- `nome` (string, obrigatório) - Termo de busca para o título do jogo
+
+**Resposta de Sucesso (200 OK):**
+
+```json
+[
+  {
+    "id": "123456",
+    "name": "The Witcher 3: Wild Hunt",
+    "background_image": "https://media.rawg.io/media/games/123/123456.jpg",
+    "genres": ["Action", "RPG"]
+  },
+  {
+    "id": "789012",
+    "name": "The Witcher 3: Wild Hunt - Blood and Wine",
+    "background_image": "https://media.rawg.io/media/games/789/789012.jpg",
+    "genres": ["Action", "RPG"]
+  }
+]
+```
+
 ### 3. Documentação de Fluxo e Comunicação
 
 Descrição breve de como os componentes se comunicam:
 
-- O **Frontend**, desenvolvido em Angular, utilizará os recursos de comunicação HTTP do framework para consumir os endpoints da API.
+- O **Frontend**, desenvolvido em React com TypeScript, utilizará os recursos de comunicação HTTP via Axios para consumir os endpoints da API.
 - O **Backend** validará os dados recebidos antes de processar as regras de negócio na camada de serviço.
 - As mensagens de erro da API serão padronizadas para que o frontend possa exibir informações claras ao jogador.
 
@@ -104,7 +229,7 @@ O sistema seguirá uma arquitetura de sistemas distribuídos, separando claramen
 
 ### 2. Tecnologias Selecionadas (Stack Tecnológica)
 
-- **Frontend:** Desenvolvido em Angular para garantir uma interface web responsiva e consumo assíncrono de dados via API.
+- **Frontend:** Desenvolvido em React com TypeScript para garantir uma interface web responsiva e consumo assíncrono de dados via API.
 - **Backend:** Implementado em Java com Spring Boot, utilizando Maven para gerenciamento de dependências e automação de build.
 - **API REST:** Utilização de formato JSON para troca de mensagens, seguindo os verbos HTTP padronizados (GET, POST, PUT, DELETE).
 - **Persistência de Dados:** Uso de um banco de dados relacional, como PostgreSQL ou MySQL, para garantir a integridade dos dados dos usuários e suas bibliotecas.
@@ -120,13 +245,13 @@ O repositório será organizado de forma a separar a aplicação frontend, o bac
 ### 4. Estratégia de Persistência e Integração
 
 - **Camada de Dados:** Uso do Hibernate/Spring Data JPA para mapear as classes do backend para as tabelas do banco de dados.
-- **Variáveis de Ambiente:** A arquitetura prevê o uso de arquivos de configuração e variáveis de ambiente para gerenciar credenciais do banco de dados e configurações da aplicação, separando o contexto de desenvolvimento do contexto de produção.
+- **Variáveis de Ambiente:** A arquitetura prevê o uso de arquivos de configuração e variáveis de ambiente para gerenciar credenciais do banco de dados e configurações da aplicação entre diferentes ambientes.
 
 ### 5. Defesa de Decisões Técnicas
 
 - "Optamos pelo Spring Boot no backend devido à sua robustez e facilidade de integração com o Maven, além do suporte ao desenvolvimento de APIs REST e persistência de dados."
 
-- "A escolha do Angular para o frontend justifica-se pela estrutura baseada em componentes e pelos recursos integrados para comunicação com APIs, facilitando o desenvolvimento da interface da biblioteca de jogos."
+- "A escolha do React com TypeScript para o frontend justifica-se pela estrutura baseada em componentes, tipagem estática e pelos recursos integrados para comunicação com APIs, facilitando o desenvolvimento da interface da biblioteca."
 
 - "A escolha de um banco de dados relacional justifica-se pela necessidade de manter a integridade dos relacionamentos entre usuários, jogos e bibliotecas."
 
@@ -136,7 +261,7 @@ O repositório será organizado de forma a separar a aplicação frontend, o bac
 
 ### 1. Modelagem de Requisitos Detalhada
 
-- **RF01  - Adicionar Jogo à Biblioteca:** O sistema deve permitir que o jogador adicione um jogo à sua biblioteca informando a plataforma e os demais dados disponíveis.
+- **RF01 - Adicionar Jogo à Biblioteca:** O sistema deve permitir que o jogador adicione um jogo à sua biblioteca informando a plataforma e os demais dados disponíveis.
 
   - **Regra de Negócio:** O título e a plataforma devem ser informados para que o jogo seja adicionado à biblioteca.
 
@@ -183,15 +308,13 @@ Descrição das principais entidades e seus relacionamentos:
 - **Jogo:** `id`, `titulo`, `categoria`, `url_capa`.
 - **BibliotecaJogo:** `id`, `id_usuario` (FK), `id_jogo` (FK), `plataforma`, `status`, `nota`, `data_adicao`.
 
-- Perfeito. Analisei o arquivo `GameLib---biblioteca-pessoal-de-jogos-main.zip` e, com base no código real do projeto, fiz a substituição mantendo **a mesma estrutura de tópicos do seu exemplo**, mas agora adaptada ao **GameLib — Biblioteca Pessoal de Jogos**.
-
-Um detalhe importante: no projeto enviado, o frontend é **React + TypeScript + Vite**, e não Angular. Também considerei os endpoints e regras que realmente aparecem no código.
+---
 
 ## Backend (Java + Spring Boot)
 
 ### 1. Modelo de Dados (Entidade BibliotecaJogo)
 
-Seguindo a modelagem de dados do GameLib, a entidade `BibliotecaJogo` representa o vínculo entre um usuário e um jogo, armazenando informações específicas da biblioteca pessoal, como plataforma, status, nota e opinião:
+Seguindo a modelagem de dados do GameLib, a entidade `BibliotecaJogo` representa o vínculo entre um usuário e um jogo, armazenando informações específicas da biblioteca pessoal, como plataforma, status e nota.
 
 ```java
 @Entity
@@ -374,7 +497,7 @@ public class BibliotecaService {
 
 Além da adição, o serviço permite listar, filtrar, atualizar e remover jogos da biblioteca.
 
-### 3.Controlador da API (Contratos)
+### 3. Controlador da API (Contratos)
 
 O controlador disponibiliza os endpoints REST responsáveis pelo gerenciamento da biblioteca:
 
@@ -456,22 +579,23 @@ public class BibliotecaController {
 }
 ```
 
-Os principais contratos são:
+### 4. Resumo dos Endpoints Disponíveis
 
-| Método | Endpoint                                 | Função                  |
-| ------ | ---------------------------------------- | ----------------------- |
-| POST   | `/api/v1/biblioteca`                     | Adicionar jogo          |
-| GET    | `/api/v1/biblioteca`                     | Listar biblioteca       |
-| GET    | `/api/v1/biblioteca?status=JOGANDO`      | Filtrar por status      |
-| PUT    | `/api/v1/biblioteca/{id}`                | Atualizar jogo          |
-| DELETE | `/api/v1/biblioteca/{id}`                | Remover jogo            |
-| GET    | `/api/v1/jogos-externos/buscar?nome=...` | Pesquisar jogos na RAWG |
+| Método | Endpoint | Função |
+|--------|----------|--------|
+| GET | `/api/v1/jogos` | Buscar jogos por título |
+| POST | `/api/v1/biblioteca` | Adicionar jogo à biblioteca |
+| GET | `/api/v1/biblioteca` | Listar biblioteca do usuário |
+| GET | `/api/v1/biblioteca?status=JOGANDO` | Filtrar biblioteca por status |
+| PUT | `/api/v1/biblioteca/{id}` | Atualizar informações do jogo |
+| DELETE | `/api/v1/biblioteca/{id}` | Remover jogo da biblioteca |
+| GET | `/api/v1/jogos-externos/buscar?nome=...` | Pesquisar jogos na API RAWG |
 
-### 4. Validação de Dados no Backend
+### 5. Validação de Dados no Backend
 
 A validação ocorre tanto na entrada dos dados da API quanto na aplicação das regras de negócio no serviço.
 
-### 5.Validação no DTO (Entrada da API)
+#### Validação no DTO (Entrada da API)
 
 Para adicionar um jogo, o GameLib utiliza Bean Validation diretamente no DTO:
 
@@ -503,7 +627,7 @@ public record AdicionarJogoBibliotecaDTO(
 
 Dessa forma, o sistema impede, por exemplo, que um jogo seja cadastrado sem título ou plataforma e também impede notas fora do intervalo de 0 a 10.
 
-### Validação de Regra de Negócio (Serviço)
+#### Validação de Regra de Negócio (Serviço)
 
 Além das validações do DTO, o serviço verifica regras relacionadas à biblioteca do usuário.
 
@@ -539,7 +663,7 @@ BibliotecaJogo item =
         );
 ```
 
-### 5. Testes Automatizados no Backend
+### 6. Testes Automatizados no Backend
 
 A suíte de testes utiliza **JUnit 5 e Mockito** para validar as principais regras de negócio do sistema.
 
@@ -549,7 +673,7 @@ Os testes devem ser executados durante o processo de build utilizando Maven:
 mvn test
 ```
 
-### Teste Unitário para Adição de Jogo
+#### Teste Unitário para Adição de Jogo
 
 O teste abaixo verifica se um jogo pode ser adicionado corretamente à biblioteca:
 
@@ -652,9 +776,9 @@ void adicionarJogoDuplicadoNaMesmaPlataformaLancaExcecao() {
 }
 ```
 
-## 6. Ambiente e Automação (Backend)
+### 7. Ambiente e Automação (Backend)
 
-### pom.xml (Maven - Backend)
+#### pom.xml (Maven - Backend)
 
 O projeto utiliza Maven para gerenciamento das dependências e automação do build. A configuração atual utiliza **Java 21** e Spring Boot.
 
@@ -718,7 +842,7 @@ O projeto também utiliza:
 * Lombok;
 * JUnit e Mockito para testes.
 
-### application.properties (Spring Boot - Backend)
+#### application.properties (Spring Boot - Backend)
 
 No ambiente de desenvolvimento, o sistema utiliza banco H2 em memória:
 
@@ -769,13 +893,15 @@ rawg.api.key=${RAWG_API_KEY}
 rawg.api.url=https://api.rawg.io/api
 ```
 
-> **Observação de segurança:** no arquivo enviado havia uma chave da RAWG e um segredo JWT diretamente no `application.properties`. Na documentação final, é mais adequado representá-los como variáveis de ambiente, como acima, para não expor credenciais no código-fonte.
+> **Observação de segurança:** As chaves de API e segredos JWT devem ser armazenados como variáveis de ambiente e nunca commitados no repositório. No arquivo enviado, essas credenciais devem ser substituídas por variáveis de ambiente (`${VAR_NAME}`).
 
-# Implementação do Frontend (React)
+---
+
+## Implementação do Frontend (React)
 
 O frontend do GameLib utiliza **React com TypeScript**, Vite, Axios e Tailwind CSS.
 
-### 1.Consumo da API (Serviço)
+### 1. Consumo da API (Serviço)
 
 A comunicação com o backend é centralizada utilizando Axios:
 
@@ -857,7 +983,7 @@ export const gamesService = {
 };
 ```
 
-### 2.Componente de Busca (Interface)
+### 2. Componente de Busca (Interface)
 
 O componente `AddGameModal` permite ao usuário pesquisar jogos através da API externa RAWG antes de adicioná-los à biblioteca.
 
@@ -930,7 +1056,7 @@ const jogosFiltrados =
           );
 ```
 
-### 3.Validação de Dados no Frontend
+### 3. Validação de Dados no Frontend
 
 A validação no frontend evita o envio de dados incompletos e fornece feedback imediato ao usuário.
 
@@ -964,7 +1090,7 @@ A interface também limita a nota entre 0 e 10:
 
 O frontend realiza essas validações para melhorar a experiência do usuário, mas as regras também são obrigatoriamente verificadas no backend.
 
-### 4.Testes Automatizados no Frontend
+### 4. Testes Automatizados no Frontend
 
 No projeto enviado, o frontend possui configuração para TypeScript, ESLint e build automatizado através do Vite:
 
@@ -986,9 +1112,9 @@ npm run lint
 npm run build
 ```
 
-A estrutura atual do projeto **não apresenta uma suíte Jest/React Testing Library implementada**, portanto não seria correto afirmar que esses testes já existem no código enviado. Caso sejam exigidos pelo projeto, podem ser adicionados posteriormente.
+A estrutura atual do projeto **não apresenta uma suíte Jest/React Testing Library implementada**. Caso sejam exigidos testes de componentes, essa suíte pode ser adicionada no futuro.
 
-### Ambiente e Automação (Frontend)
+### 5. Ambiente e Automação (Frontend)
 
 O frontend utiliza Vite para desenvolvimento e build da aplicação React.
 
@@ -1015,7 +1141,7 @@ E a aplicação pode ser executada em ambiente de desenvolvimento através de:
 npm run dev
 ```
 
-### `.env` (React - Frontend)
+#### `.env` (React - Frontend)
 
 A URL da API deve ser configurada através de variável de ambiente para evitar que o endereço do backend fique fixo no código.
 
@@ -1041,4 +1167,3 @@ export const api = axios.create({
 ```
 
 Dessa forma, é possível utilizar diferentes URLs para desenvolvimento e produção sem alterar o código-fonte da aplicação.
-
