@@ -12,7 +12,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -116,5 +115,23 @@ public class BibliotecaServiceTest {
 
     assertDoesNotThrow(() -> bibliotecaService.removerItem(1L, 100L));
     verify(bibliotecaJogoRepository, times(1)).delete(bibliotecaJogo);
+  }
+
+  @Test
+  @DisplayName("Deve atualizar status, nota e opinião do item da biblioteca")
+  void atualizarItemComSucesso() {
+    var dtoAtualizacao = new com.gamelib.GameLib.dto.AtualizarJogoBibliotecaDTO("PS5", StatusJogo.FINALIZADO, 10, "Ótimo jogo!");
+
+    when(bibliotecaJogoRepository.findByIdAndUsuarioId(100L, 1L)).thenReturn(Optional.of(bibliotecaJogo));
+    when(bibliotecaJogoRepository.save(any(BibliotecaJogo.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    BibliotecaJogoResponseDTO response = bibliotecaService.atualizarItem(1L, 100L, dtoAtualizacao);
+
+    assertNotNull(response);
+    assertEquals("PS5", response.plataforma());
+    assertEquals(StatusJogo.FINALIZADO, response.statusJogo());
+    assertEquals(10, response.nota());
+    assertEquals("Ótimo jogo!", response.opiniao());
+    verify(bibliotecaJogoRepository).save(any(BibliotecaJogo.class));
   }
 }

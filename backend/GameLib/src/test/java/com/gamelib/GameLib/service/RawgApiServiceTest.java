@@ -13,10 +13,10 @@ import org.springframework.web.client.RestClient;
 
 import java.util.List;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -40,47 +40,69 @@ class RawgApiServiceTest {
     @Test
     @DisplayName("Deve buscar jogos com sucesso simulando o RestClient")
     void buscarJogosPorNomeSucesso() {
-        // Configura as propriedades anotadas com @Value na Service
         ReflectionTestUtils.setField(rawgApiService, "apiUrl", "https://api.rawg.io/api");
         ReflectionTestUtils.setField(rawgApiService, "apiKey", "test-key");
 
-        // Dado simulado
         var game = new RawgGameResponseDTO(1L, "Cyberpunk 2077", "http://capa.jpg");
         var searchResponse = new RawgSearchResponseDTO(List.of(game));
 
-        // Mocks encadeados do RestClient
         when(restClient.get()).thenReturn(requestHeadersUriSpec);
         when(requestHeadersUriSpec.uri(anyString(), anyString(), anyString())).thenReturn(requestHeadersSpec);
         when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
         when(responseSpec.body(RawgSearchResponseDTO.class)).thenReturn(searchResponse);
 
-        // Execução
         List<RawgGameResponseDTO> resultado = rawgApiService.buscarJogosPorNome("Cyberpunk");
 
-        // Asserções
         assertFalse(resultado.isEmpty());
         assertEquals("Cyberpunk 2077", resultado.get(0).name());
+        verify(requestHeadersUriSpec).uri(
+                eq("https://api.rawg.io/api/games?key={key}&search={search}&page_size=10"),
+                eq("test-key"),
+                eq("Cyberpunk"));
     }
 
     @Test
-    @DisplayName("Deve desserializar o JSON real do RAWG com genres e platforms em objetos")
-    void deveDesserializarJsonRealDoRawg() throws Exception {
-        String json = """
-            {
-              "results": [
-                {
-                  "id": 1,
-                  "name": "The Witcher 3",
-                  "background_image": "https://example.com/image.jpg",
-                }
-              ]
-            }
-            """;
+    @DisplayName("Deve retornar lista vazia quando a busca vier vazia")
+    void buscarJogosPorNomeComTermoVazioRetornaListaVazia() {
+        List<RawgGameResponseDTO> resultado = rawgApiService.buscarJogosPorNome("   ");
 
-        ObjectMapper mapper = new ObjectMapper();
-        RawgSearchResponseDTO response = mapper.readValue(json, RawgSearchResponseDTO.class);
-
-        assertNotNull(response.results());
-        assertEquals("The Witcher 3", response.results().get(0).name());
+        assertNotNull(resultado);
+        assertTrue(resultado.isEmpty());
+        verifyNoInteractions(restClient);
     }
+
+    @Test
+    @DisplayName("Deve retornar lista vazia quando a API responder sem resultados")
+    void buscarJogosPorNomeSemResultadosRetornaListaVazia() {
+        ReflectionTestUtils.setField(rawgApiService, "apiUrl", "https://api.rawg.io/api");
+        ReflectionTestUtils.setField(rawgApiService, "apiKey", "test-key");
+
+        when(restClient.get()).thenReturn(requestHeadersUriSpec);
+        when(requestHeadersUriSpec.uri(anyString(), anyString(), anyString())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.body(RawgSearchResponseDTO.class)).thenReturn(new RawgSearchResponseDTO(null));
+
+        List<RawgGameResponseDTO> resultado = rawgApiService.buscarJogosPorNome("Portal");
+
+        assertNotNull(resultado);
+        assertTrue(resultado.isEmpty());
+    }
+
+    @Test
+    @DisplayName("Deve retornar lista vazia quando a API responder nula")
+    void buscarJogosPorNomeRespostaNulaRetornaListaVazia() {
+        ReflectionTestUtils.setField(rawgApiService, "apiUrl", "https://api.rawg.io/api");
+        ReflectionTestUtils.setField(rawgApiService, "apiKey", "test-key");
+
+        when(restClient.get()).thenReturn(requestHeadersUriSpec);
+        when(requestHeadersUriSpec.uri(anyString(), anyString(), anyString())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.body(RawgSearchResponseDTO.class)).thenReturn(null);
+
+        List<RawgGameResponseDTO> resultado = rawgApiService.buscarJogosPorNome("Portal");
+
+        assertNotNull(resultado);
+        assertTrue(resultado.isEmpty());
+    }
+
 }

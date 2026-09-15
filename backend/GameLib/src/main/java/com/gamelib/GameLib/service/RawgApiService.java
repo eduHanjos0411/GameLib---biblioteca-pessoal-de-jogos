@@ -27,8 +27,14 @@ public class RawgApiService {
     }
 
   public List<RawgGameResponseDTO> buscarJogosPorNome(String nome) {
+      if (nome == null || nome.isBlank()) {
+        return Collections.emptyList();
+      }
+
+      String termoBusca = nome.trim();
+
       RawgSearchResponseDTO response = restClient.get()
-              .uri(apiUrl + "/games?key={key}&search={search}&page_size=10", apiKey, nome)
+          .uri(apiUrl + "/games?key={key}&search={search}&page_size=10", apiKey, termoBusca)
               .retrieve()
               .body(RawgSearchResponseDTO.class);
 

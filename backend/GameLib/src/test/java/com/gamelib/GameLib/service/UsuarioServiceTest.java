@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -20,12 +21,19 @@ import com.gamelib.GameLib.dto.UsuarioResponseDTO;
 import com.gamelib.GameLib.exception.RegraNegocioException;
 import com.gamelib.GameLib.model.Usuario;
 import com.gamelib.GameLib.repository.UsuarioRepository;
+import com.gamelib.GameLib.security.TokenService;
 
 @ExtendWith(MockitoExtension.class)
 public class UsuarioServiceTest {
 
   @Mock
   private UsuarioRepository usuarioRepository;
+
+  @Mock
+  private PasswordEncoder passwordEncoder;
+
+  @Mock
+  private TokenService tokenService;
 
   @Mock
   private RawgApiService rawgApiService;
@@ -48,6 +56,7 @@ public class UsuarioServiceTest {
   @DisplayName("Deve cadastrar um novo usuário com sucesso quando o email for único")
   void testCadastrarUsuarioComSucesso() {
     when(usuarioRepository.existsByEmail(cadastroDTO.email())).thenReturn(false);
+    when(passwordEncoder.encode("senha123")).thenReturn("senha_criptografada");
     when(usuarioRepository.save(any(Usuario.class))).thenReturn(usuario);
 
     UsuarioResponseDTO response = usuarioService.cadastrarUsuario(cadastroDTO);
@@ -56,6 +65,7 @@ public class UsuarioServiceTest {
     assertEquals(1L, response.id());
     assertEquals("Pedro", response.nome());
     assertEquals("pedro@email.com", response.email());
+    verify(passwordEncoder).encode("senha123");
     verify(usuarioRepository, times(1)).save(any(Usuario.class));
   }
 
