@@ -14,7 +14,7 @@ public interface JogoRepository extends JpaRepository<Jogo, Long> {
   List<Jogo> findByTituloContainingIgnoreCase(String titulo);
 
   // Busca por ID da API externa caso o jogo tenha vindo do RAWG/IGDB
-  Optional<Jogo> findByApiExternalId(String apiExternalId);
+  Optional<Jogo> findByApiExternalId(Long apiExternalId);
 
   // Verifica se um jogo com título exato já existe no catálogo
   Optional<Jogo> findByTituloIgnoreCase(String titulo);

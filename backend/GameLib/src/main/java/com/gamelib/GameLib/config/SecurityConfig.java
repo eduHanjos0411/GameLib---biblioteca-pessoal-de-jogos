@@ -40,8 +40,8 @@ public class SecurityConfig {
         .authorizeHttpRequests(authorize -> authorize
             .requestMatchers(HttpMethod.POST, "/api/v1/usuarios/login").permitAll()
             .requestMatchers(HttpMethod.POST, "/api/v1/usuarios/cadastrar").permitAll()
-            .requestMatchers("/api/v1/jogos-externos/**").authenticated()
-            .requestMatchers("/api/v1/jogos/**").authenticated()
+            .requestMatchers("/api/v1/jogos-externos/**").permitAll()
+            .requestMatchers("/api/v1/biblioteca/**").authenticated()
             .requestMatchers("/h2-console/**").permitAll()
             .anyRequest().authenticated())
         .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))

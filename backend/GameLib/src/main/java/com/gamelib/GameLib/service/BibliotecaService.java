@@ -67,7 +67,7 @@ public class BibliotecaService {
 
   private Jogo resolverOuCriarJogo(AdicionarJogoBibliotecaDTO dto) {
     // Tenta buscar por ID da API externa caso informado
-    if (dto.id() != null && !dto.id().isBlank()) {
+    if (dto.id() != null) {
       var jogoExistente = jogoRepository.findByApiExternalId(dto.id());
       if (jogoExistente.isPresent()) {
         return jogoExistente.get();
@@ -82,21 +82,17 @@ public class BibliotecaService {
   private Jogo criarNovoJogoComDadosExternos(AdicionarJogoBibliotecaDTO dto) {
     Jogo novoJogo = new Jogo();
     novoJogo.setTitulo(dto.titulo());
-    novoJogo.setCategoria(dto.genres() != null && !dto.genres().isEmpty() ? dto.genres().get(0) : null);
     novoJogo.setUrlCapa(dto.background_image());
-    novoJogo.setApiExternalId(dto.id());
 
     // Se dados de capa/categoria vierem vazios do DTO, busca do RAWG como fallback
-    if ((dto.background_image() == null || dto.genres() == null) && dto.titulo() != null) {
+    if ((dto.background_image() == null) && dto.titulo() != null) {
       List<RawgGameResponseDTO> buscaExterna = rawgApiService.buscarJogosPorNome(dto.titulo());
       if (!buscaExterna.isEmpty()) {
         RawgGameResponseDTO dadosApi = buscaExterna.get(0);
         if (novoJogo.getUrlCapa() == null) {
-          novoJogo.setUrlCapa(dadosApi.backgroundImage());
+          novoJogo.setUrlCapa(dadosApi.background_image());
         }
-        if (novoJogo.getCategoria() == null && dadosApi.genres() != null && !dadosApi.genres().isEmpty()) {
-          novoJogo.setCategoria(dadosApi.genres().get(0).name());
-        }
+
         if (novoJogo.getApiExternalId() == null && dadosApi.id() != null) {
           novoJogo.setApiExternalId(dadosApi.id().toString());
         }

@@ -60,9 +60,6 @@ public class BibliotecaServiceTest {
 
     jogo = new Jogo("Cyberpunk 2077", "RPG", "http://capa.jpg", "12345");
     jogo.setId(10L);
-    ArrayList<String> generos = new ArrayList<>();
-    generos.add("RPG");
-    generos.add("FPS");
 
     bibliotecaJogo = new BibliotecaJogo();
     bibliotecaJogo.setId(100L);
@@ -75,7 +72,7 @@ public class BibliotecaServiceTest {
 
     adicionarDTO = new AdicionarJogoBibliotecaDTO(
             "Cyberpunk 2077", "PC", StatusJogo.JOGANDO, 9,
-            "Jogo excelente!", generos, "http://capa.jpg", "12345"
+            "Jogo excelente!", "http://capa.jpg", 12345L
     );
   }
 

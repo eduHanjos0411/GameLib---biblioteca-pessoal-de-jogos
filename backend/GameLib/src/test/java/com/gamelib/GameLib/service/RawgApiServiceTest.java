@@ -13,6 +13,8 @@ import org.springframework.web.client.RestClient;
 
 import java.util.List;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -43,7 +45,7 @@ class RawgApiServiceTest {
         ReflectionTestUtils.setField(rawgApiService, "apiKey", "test-key");
 
         // Dado simulado
-        var game = new RawgGameResponseDTO(1L, "Cyberpunk 2077", "http://capa.jpg", List.of());
+        var game = new RawgGameResponseDTO(1L, "Cyberpunk 2077", "http://capa.jpg");
         var searchResponse = new RawgSearchResponseDTO(List.of(game));
 
         // Mocks encadeados do RestClient
@@ -58,5 +60,27 @@ class RawgApiServiceTest {
         // Asserções
         assertFalse(resultado.isEmpty());
         assertEquals("Cyberpunk 2077", resultado.get(0).name());
+    }
+
+    @Test
+    @DisplayName("Deve desserializar o JSON real do RAWG com genres e platforms em objetos")
+    void deveDesserializarJsonRealDoRawg() throws Exception {
+        String json = """
+            {
+              "results": [
+                {
+                  "id": 1,
+                  "name": "The Witcher 3",
+                  "background_image": "https://example.com/image.jpg",
+                }
+              ]
+            }
+            """;
+
+        ObjectMapper mapper = new ObjectMapper();
+        RawgSearchResponseDTO response = mapper.readValue(json, RawgSearchResponseDTO.class);
+
+        assertNotNull(response.results());
+        assertEquals("The Witcher 3", response.results().get(0).name());
     }
 }

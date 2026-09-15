@@ -52,7 +52,7 @@ public class TokenService {
 
         return claims.getSubject();
     } catch (Exception e) {
-      return null;
+      return "The problema is here";
     }
   }
 }

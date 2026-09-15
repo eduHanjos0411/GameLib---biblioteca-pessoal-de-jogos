@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { 
-  X, 
-  Search, 
-  ChevronLeft, 
-  Gamepad2, 
-  CheckCircle2, 
+import {
+  X,
+  Search,
+  ChevronLeft,
+  Gamepad2,
+  CheckCircle2,
   Loader2,
-  Info
+  Info,
 } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
@@ -50,9 +50,6 @@ export function AddGameModal({ isOpen, onClose, onGameAdded }: AddGameModalProps
 
   const handleSelectGame = (game: JogoExternoDTO) => {
     setSelectedGame(game);
-    if (game.plataformas && game.plataformas.length > 0) {
-      setPlataforma(game.plataformas[0]);
-    }
   };
 
   const handleSave = async (e: React.SubmitEvent<HTMLFormElement>) => {
@@ -62,7 +59,7 @@ export function AddGameModal({ isOpen, onClose, onGameAdded }: AddGameModalProps
     setSaving(true);
     try {
       await gamesService.adicionarJogo({
-        name: selectedGame.name,
+        titulo: selectedGame.name,
         background_image: selectedGame.background_image,
         id: selectedGame.id,
         plataforma,
@@ -210,16 +207,15 @@ export function AddGameModal({ isOpen, onClose, onGameAdded }: AddGameModalProps
                   <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest ml-1">
                     Status Atual
                   </label>
-                  <select 
-                    value={status} 
+                  <select
+                    value={status}
                     onChange={(e) => setStatus(e.target.value as StatusJogo)}
                     className="w-full bg-surface border border-surface-border rounded-lg px-4 py-2.5 text-sm text-gray-100 focus:outline-none focus:border-brand-neon focus:ring-1 focus:ring-brand-neon transition-all"
                   >
                     <option value="JOGANDO">🕹️ Jogando</option>
-                    <option value="ZERADO">🏆 Zerado</option>
-                    <option value="PLATINADO">👑 Platinado</option>
-                    <option value="DESEJADO">💖 Desejado</option>
+                    <option value="FINALIZADO">🏆 Finalizado</option>
                     <option value="ABANDONADO">💀 Abandonado</option>
+                    <option value="NAO_INICIADO">📦 Não iniciado</option>
                   </select>
                 </div>
               </div>

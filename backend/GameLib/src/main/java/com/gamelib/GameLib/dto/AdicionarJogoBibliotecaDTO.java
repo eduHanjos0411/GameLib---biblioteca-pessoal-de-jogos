@@ -1,6 +1,5 @@
 package com.gamelib.GameLib.dto;
 
-import java.util.ArrayList;
 
 import com.gamelib.GameLib.enums.StatusJogo;
 
@@ -22,9 +21,8 @@ public record AdicionarJogoBibliotecaDTO(
     Integer nota,
 
     String comentario,
-    ArrayList<String> genres,
     String background_image,
-    String id
+    Long id
 ) {
 
 }
