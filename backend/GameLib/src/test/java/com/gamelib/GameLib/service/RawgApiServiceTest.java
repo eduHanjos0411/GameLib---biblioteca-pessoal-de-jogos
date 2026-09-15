@@ -94,6 +94,7 @@ class RawgApiServiceTest {
         ReflectionTestUtils.setField(rawgApiService, "apiUrl", "https://api.rawg.io/api");
         ReflectionTestUtils.setField(rawgApiService, "apiKey", "test-key");
 
+        
         when(restClient.get()).thenReturn(requestHeadersUriSpec);
         when(requestHeadersUriSpec.uri(anyString(), anyString(), anyString())).thenReturn(requestHeadersSpec);
         when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
