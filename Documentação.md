@@ -42,172 +42,224 @@ Uma lista priorizada de funcionalidades para guiar o desenvolvimento incremental
 
 ### 2. Contratos da API (Documentação Técnica)
 
-#### Endpoint 1: Busca de Jogos
+#### Endpoints de Autenticação (UsuarioController)
 
-**Rota:** `GET /api/v1/jogos`
+**POST `/api/v1/usuarios/cadastrar`** - Cadastrar novo usuário
 
-**Parâmetros (Query):**
-- `titulo` (string, opcional) - Filtro pelo título do jogo
-
-**Resposta de Sucesso (200 OK):**
-
-```json
-[
-  {
-    "id": 101,
-    "titulo": "The Witcher 3: Wild Hunt",
-    "plataforma": "PC"
-  }
-]
-```
-
-#### Endpoint 2: Adicionar Jogo à Biblioteca
-
-**Rota:** `POST /api/v1/biblioteca`
-
-**Corpo da Requisição (JSON):**
-
+Corpo da Requisição:
 ```json
 {
-  "jogoId": 101,
-  "plataforma": "PC",
-  "status": "JOGANDO",
-  "nota": 10
+  "nome": "João Silva",
+  "email": "joao@example.com",
+  "senha": "senha123"
 }
 ```
 
-**Resposta de Sucesso (201 Created):**
-
+Resposta (201 Created):
 ```json
 {
   "id": 1,
-  "jogoId": 101,
+  "nome": "João Silva",
+  "email": "joao@example.com",
+  "dataCriacao": "2024-01-15T10:30:00"
+}
+```
+
+---
+
+**POST `/api/v1/usuarios/login`** - Autenticar usuário
+
+Corpo da Requisição:
+```json
+{
+  "email": "joao@example.com",
+  "senha": "senha123"
+}
+```
+
+Resposta (200 OK):
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "type": "Bearer",
+  "usuarioId": 1,
+  "nome": "João Silva"
+}
+```
+
+---
+
+**GET `/api/v1/usuarios/{id}`** - Buscar usuário por ID
+
+Resposta (200 OK):
+```json
+{
+  "id": 1,
+  "nome": "João Silva",
+  "email": "joao@example.com",
+  "dataCriacao": "2024-01-15T10:30:00"
+}
+```
+
+---
+
+#### Endpoints de Biblioteca (BibliotecaController)
+
+**POST `/api/v1/biblioteca`** - Adicionar jogo à biblioteca
+
+Corpo da Requisição:
+```json
+{
   "titulo": "The Witcher 3: Wild Hunt",
   "plataforma": "PC",
   "status": "JOGANDO",
-  "nota": 10,
+  "nota": 9,
+  "comentario": "Excelente jogo!",
+  "background_image": "https://media.rawg.io/...",
+  "id": "123456"
+}
+```
+
+Resposta (201 Created):
+```json
+{
+  "id": 1,
+  "idJogo": 101,
+  "titulo": "The Witcher 3: Wild Hunt",
+  "urlCapa": "https://media.rawg.io/...",
+  "categoria": "Action, RPG",
+  "plataforma": "PC",
+  "statusJogo": "JOGANDO",
+  "nota": 9,
+  "opiniao": "Excelente jogo!",
   "dataAdicao": "2024-01-15"
 }
 ```
 
-**Resposta de Erro (400 Bad Request):**
+---
 
-Caso o título ou a plataforma não sejam informados:
+**GET `/api/v1/biblioteca`** - Listar biblioteca do usuário
 
-```json
-{
-  "erro": "Título e plataforma são campos obrigatórios."
-}
-```
-
-#### Endpoint 3: Listar Biblioteca do Usuário
-
-**Rota:** `GET /api/v1/biblioteca`
-
-**Parâmetros (Query):**
-- `status` (string, opcional) - Filtrar por status (JOGANDO, FINALIZADO, ABANDONADO, NAO_INICIADO)
-
-**Resposta de Sucesso (200 OK):**
-
+Resposta (200 OK):
 ```json
 [
   {
     "id": 1,
+    "idJogo": 101,
     "titulo": "The Witcher 3: Wild Hunt",
+    "urlCapa": "https://media.rawg.io/...",
+    "categoria": "Action, RPG",
     "plataforma": "PC",
-    "status": "JOGANDO",
+    "statusJogo": "JOGANDO",
     "nota": 9,
+    "opiniao": "Excelente jogo!",
     "dataAdicao": "2024-01-15"
   },
   {
     "id": 2,
+    "idJogo": 102,
     "titulo": "Cyberpunk 2077",
+    "urlCapa": "https://media.rawg.io/...",
+    "categoria": "Action, RPG",
     "plataforma": "PC",
-    "status": "FINALIZADO",
+    "statusJogo": "FINALIZADO",
     "nota": 8,
+    "opiniao": "Bom, mas com bugs",
     "dataAdicao": "2024-01-20"
   }
 ]
 ```
 
-#### Endpoint 4: Atualizar Jogo da Biblioteca
+---
 
-**Rota:** `PUT /api/v1/biblioteca/{id}`
+**GET `/api/v1/biblioteca?status=JOGANDO`** - Listar biblioteca filtrada por status
 
-**Parâmetro da Rota:**
-- `id` (number) - Identificador único do item na biblioteca
+Parâmetros de Query:
+- `status` (opcional) - Valores: `JOGANDO`, `FINALIZADO`, `ABANDONADO`, `NAO_INICIADO`
 
-**Corpo da Requisição (JSON):**
+Resposta (200 OK):
+```json
+[
+  {
+    "id": 1,
+    "idJogo": 101,
+    "titulo": "The Witcher 3: Wild Hunt",
+    "urlCapa": "https://media.rawg.io/...",
+    "categoria": "Action, RPG",
+    "plataforma": "PC",
+    "statusJogo": "JOGANDO",
+    "nota": 9,
+    "opiniao": "Excelente jogo!",
+    "dataAdicao": "2024-01-15"
+  }
+]
+```
 
+---
+
+**PUT `/api/v1/biblioteca/{id}`** - Atualizar jogo da biblioteca
+
+Corpo da Requisição:
 ```json
 {
   "plataforma": "PC",
-  "status": "FINALIZADO",
-  "nota": 9,
-  "comentario": "Excelente jogo!"
+  "statusJogo": "FINALIZADO",
+  "nota": 10,
+  "opiniao": "Jogo incrível, recomendo!"
 }
 ```
 
-**Resposta de Sucesso (200 OK):**
-
+Resposta (200 OK):
 ```json
 {
   "id": 1,
+  "idJogo": 101,
   "titulo": "The Witcher 3: Wild Hunt",
+  "urlCapa": "https://media.rawg.io/...",
+  "categoria": "Action, RPG",
   "plataforma": "PC",
-  "status": "FINALIZADO",
-  "nota": 9,
-  "comentario": "Excelente jogo!",
+  "statusJogo": "FINALIZADO",
+  "nota": 10,
+  "opiniao": "Jogo incrível, recomendo!",
   "dataAdicao": "2024-01-15"
 }
 ```
 
-#### Endpoint 5: Remover Jogo da Biblioteca
+---
 
-**Rota:** `DELETE /api/v1/biblioteca/{id}`
+**DELETE `/api/v1/biblioteca/{id}`** - Remover jogo da biblioteca
 
-**Parâmetro da Rota:**
-- `id` (number) - Identificador único do item na biblioteca
-
-**Resposta de Sucesso (204 No Content):**
-
+Resposta (204 No Content):
 ```
 (Sem corpo de resposta)
 ```
 
-**Resposta de Erro (404 Not Found):**
+---
 
-```json
-{
-  "erro": "Item não encontrado ou sem permissão para alteração."
-}
-```
+#### Endpoints de Jogos Externos (JogoExternoController)
 
-#### Endpoint 6: Pesquisar Jogos Externos (RAWG API)
+**GET `/api/v1/jogos-externos/buscar?nome=The%20Witcher`** - Pesquisar jogos na RAWG API
 
-**Rota:** `GET /api/v1/jogos-externos/buscar`
+Parâmetros de Query:
+- `nome` (obrigatório) - Termo de busca para o título do jogo
 
-**Parâmetros (Query):**
-- `nome` (string, obrigatório) - Termo de busca para o título do jogo
-
-**Resposta de Sucesso (200 OK):**
-
+Resposta (200 OK):
 ```json
 [
   {
-    "id": "123456",
+    "id": 3328,
     "name": "The Witcher 3: Wild Hunt",
-    "background_image": "https://media.rawg.io/media/games/123/123456.jpg",
-    "genres": ["Action", "RPG"]
+    "background_image": "https://media.rawg.io/media/games/20a/20aa03ad8fea46f74c41fcc210dd2ba9.jpg"
   },
   {
-    "id": "789012",
+    "id": 23692,
     "name": "The Witcher 3: Wild Hunt - Blood and Wine",
-    "background_image": "https://media.rawg.io/media/games/789/789012.jpg",
-    "genres": ["Action", "RPG"]
+    "background_image": "https://media.rawg.io/media/games/951/951c1a53955b9c3e8a858b6c04e85bbf.jpg"
   }
 ]
 ```
+
+---
 
 ### 3. Documentação de Fluxo e Comunicação
 
@@ -216,6 +268,7 @@ Descrição breve de como os componentes se comunicam:
 - O **Frontend**, desenvolvido em React com TypeScript, utilizará os recursos de comunicação HTTP via Axios para consumir os endpoints da API.
 - O **Backend** validará os dados recebidos antes de processar as regras de negócio na camada de serviço.
 - As mensagens de erro da API serão padronizadas para que o frontend possa exibir informações claras ao jogador.
+- Todos os endpoints protegidos requerem autenticação via token JWT enviado no header `Authorization: Bearer {token}`.
 
 ---
 
@@ -497,101 +550,7 @@ public class BibliotecaService {
 
 Além da adição, o serviço permite listar, filtrar, atualizar e remover jogos da biblioteca.
 
-### 3. Controlador da API (Contratos)
-
-O controlador disponibiliza os endpoints REST responsáveis pelo gerenciamento da biblioteca:
-
-```java
-@RestController
-@RequestMapping("/api/v1/biblioteca")
-public class BibliotecaController {
-
-    private final BibliotecaService bibliotecaService;
-
-    public BibliotecaController(BibliotecaService bibliotecaService) {
-        this.bibliotecaService = bibliotecaService;
-    }
-
-    @PostMapping
-    public ResponseEntity<BibliotecaJogoResponseDTO> adicionarJogo(
-            @AuthenticationPrincipal Usuario usuarioLogado,
-            @Valid @RequestBody AdicionarJogoBibliotecaDTO dto) {
-
-        BibliotecaJogoResponseDTO response =
-            bibliotecaService.adicionarJogo(
-                usuarioLogado.getId(),
-                dto
-            );
-
-        return ResponseEntity
-            .status(HttpStatus.CREATED)
-            .body(response);
-    }
-
-    @GetMapping
-    public ResponseEntity<List<BibliotecaJogoResponseDTO>> listarBiblioteca(
-            @AuthenticationPrincipal Usuario usuarioLogado,
-            @RequestParam(required = false) StatusJogo status) {
-
-        if (status != null) {
-            return ResponseEntity.ok(
-                bibliotecaService.listarPorStatus(
-                    usuarioLogado.getId(),
-                    status
-                )
-            );
-        }
-
-        return ResponseEntity.ok(
-            bibliotecaService.listarBibliotecaPorUsuario(
-                usuarioLogado.getId()
-            )
-        );
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<BibliotecaJogoResponseDTO> atualizarItem(
-            @AuthenticationPrincipal Usuario usuarioLogado,
-            @PathVariable Long id,
-            @Valid @RequestBody AtualizarJogoBibliotecaDTO dto) {
-
-        return ResponseEntity.ok(
-            bibliotecaService.atualizarItem(
-                usuarioLogado.getId(),
-                id,
-                dto
-            )
-        );
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> removerItem(
-            @AuthenticationPrincipal Usuario usuarioLogado,
-            @PathVariable Long id) {
-
-        bibliotecaService.removerItem(
-            usuarioLogado.getId(),
-            id
-        );
-
-        return ResponseEntity.noContent().build();
-    }
-}
-```
-
-### 4. Resumo dos Endpoints Disponíveis
-
-| Método | Endpoint | Função |
-|--------|----------|--------|
-| GET | `/api/v1/jogos` | Buscar jogos por título |
-| POST | `/api/v1/biblioteca` | Adicionar jogo à biblioteca |
-| GET | `/api/v1/biblioteca` | Listar biblioteca do usuário |
-| GET | `/api/v1/biblioteca?status=JOGANDO` | Filtrar biblioteca por status |
-| PUT | `/api/v1/biblioteca/{id}` | Atualizar informações do jogo |
-| DELETE | `/api/v1/biblioteca/{id}` | Remover jogo da biblioteca |
-| GET | `/api/v1/jogos-externos/buscar?nome=...` | Pesquisar jogos na API RAWG |
-
-### 5. Validação de Dados no Backend
+### 3. Validação de Dados no Backend
 
 A validação ocorre tanto na entrada dos dados da API quanto na aplicação das regras de negócio no serviço.
 
@@ -615,12 +574,8 @@ public record AdicionarJogoBibliotecaDTO(
     Integer nota,
 
     String comentario,
-
-    ArrayList<String> genres,
-
     String background_image,
-
-    String id
+    Long id
 ) {
 }
 ```
@@ -663,7 +618,7 @@ BibliotecaJogo item =
         );
 ```
 
-### 6. Testes Automatizados no Backend
+### 4. Testes Automatizados no Backend
 
 A suíte de testes utiliza **JUnit 5 e Mockito** para validar as principais regras de negócio do sistema.
 
@@ -776,7 +731,7 @@ void adicionarJogoDuplicadoNaMesmaPlataformaLancaExcecao() {
 }
 ```
 
-### 7. Ambiente e Automação (Backend)
+### 5. Ambiente e Automação (Backend)
 
 #### pom.xml (Maven - Backend)
 
@@ -1090,31 +1045,7 @@ A interface também limita a nota entre 0 e 10:
 
 O frontend realiza essas validações para melhorar a experiência do usuário, mas as regras também são obrigatoriamente verificadas no backend.
 
-### 4. Testes Automatizados no Frontend
-
-No projeto enviado, o frontend possui configuração para TypeScript, ESLint e build automatizado através do Vite:
-
-```json
-{
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
-  }
-}
-```
-
-O processo de validação do frontend pode ser executado com:
-
-```bash
-npm run lint
-npm run build
-```
-
-A estrutura atual do projeto **não apresenta uma suíte Jest/React Testing Library implementada**. Caso sejam exigidos testes de componentes, essa suíte pode ser adicionada no futuro.
-
-### 5. Ambiente e Automação (Frontend)
+### 4. Ambiente e Automação (Frontend)
 
 O frontend utiliza Vite para desenvolvimento e build da aplicação React.
 
